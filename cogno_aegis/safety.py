@@ -45,8 +45,12 @@ DEFAULT_CRISIS_RULES: tuple[CrisisRule, ...] = (
     CrisisRule("pt", r"\bautoexterm"),
     CrisisRule("pt", r"\bquero\s+morrer\b"),
     CrisisRule("pt", r"\bdesejo\s+de\s+morrer\b"),
-    CrisisRule("pt", r"(?:preciso|estou|tenho|meu|minha|me\s+ajud).*\brisco\s+de\s+(?:morte|vida)\b"),
-    CrisisRule("pt", r"(?:preciso|estou|tenho|meu|minha|me\s+ajud).*\bemerg[êe]ncia\s+m[ée]dica\b"),
+    # The gap between prefix and keyphrase is BOUNDED (``[\s\S]{0,80}?``, not ``.*``): an
+    # unbounded greedy ``.*`` after a matchable prefix alternation backtracks quadratically on a
+    # long input that omits the suffix (a ~1 MB message → minutes of CPU, blocking the worker).
+    # ``[\s\S]`` (vs ``.``) also spans newlines so a crisis phrase split across lines still matches.
+    CrisisRule("pt", r"(?:preciso|estou|tenho|meu|minha|me\s+ajud)[\s\S]{0,80}?\brisco\s+de\s+(?:morte|vida)\b"),
+    CrisisRule("pt", r"(?:preciso|estou|tenho|meu|minha|me\s+ajud)[\s\S]{0,80}?\bemerg[êe]ncia\s+m[ée]dica\b"),
 )
 
 

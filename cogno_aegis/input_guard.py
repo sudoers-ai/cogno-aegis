@@ -66,8 +66,10 @@ class InputGuard:
 
     # ── size guards ──────────────────────────────────────────────────────
     def check_length(self, text: str) -> GuardResult:
-        """Reject text over ``max_chars``."""
-        length = len(text)
+        """Reject text over ``max_chars``. ``None``/empty is treated as zero-length (the guard is
+        the first thing to touch external input — a failed transcription surfacing as ``None`` must
+        not crash the turn with a ``TypeError`` instead of failing cleanly)."""
+        length = len(text or "")
         if length <= self.max_chars:
             return GuardResult.passed()
         log.warning("event=text_rejected length=%d limit=%d", length, self.max_chars)
