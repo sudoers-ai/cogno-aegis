@@ -86,3 +86,30 @@ def test_default_messages_cover_default_locales():
     g = InputGuard(crisis_rules=DEFAULT_CRISIS_RULES)
     res = g.check_text("suicidal thoughts")
     assert DEFAULT_CRISIS_MESSAGES[res.meta["locale"]].startswith("⚠️")
+
+
+def test_crisis_regex_is_linear_not_quadratic_redos():
+    # The bounded gap (was `.*`) must not backtrack: a large input that matches the prefix
+    # alternation but omits the keyphrase used to take O(n^2) (256 KB ~= 37 s). Now linear —
+    # a generous wall-clock bound catches a regression without being timing-flaky.
+    import time
+    g = InputGuard(crisis_rules=DEFAULT_CRISIS_RULES)
+    adversarial = "me ajud " * 130_000  # ~1 MB, no "risco"/"emergência" suffix
+    start = time.perf_counter()
+    res = g.check_crisis(adversarial)
+    elapsed = time.perf_counter() - start
+    assert res.ok is True            # no crisis phrase present → passes
+    assert elapsed < 2.0, f"crisis scan took {elapsed:.1f}s — quadratic backtracking regressed"
+
+
+def test_crisis_matches_first_person_within_bound():
+    g = InputGuard(crisis_rules=DEFAULT_CRISIS_RULES)
+    assert g.check_crisis("preciso de ajuda, estou em risco de morte").ok is False
+    # spanning a newline still matches ([\s\S] vs .)
+    assert g.check_crisis("preciso de ajuda\nrisco de vida").ok is False
+
+
+def test_none_input_does_not_crash():
+    g = InputGuard(max_chars=5, crisis_rules=DEFAULT_CRISIS_RULES)
+    assert g.check_length(None).ok is True      # len(None) would raise TypeError
+    assert g.check_text(None).ok is True
