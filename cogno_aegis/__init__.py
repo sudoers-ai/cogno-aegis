@@ -21,6 +21,15 @@ credential storage and budget guards (CoreDB-coupled) are intentionally out of
 this slice.
 """
 
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _dist_version
+
+try:
+    __version__ = _dist_version("cogno-aegis")
+except PackageNotFoundError:  # source tree without an installed dist (e.g. vendored checkout)
+    __version__ = "0.0.0"
+
+
 from cogno_aegis.crypto import ENC_PREFIX, Cipher, derive_key
 from cogno_aegis.errors import AegisError, CryptoUnavailableError, DecryptionError
 from cogno_aegis.hmac_auth import (
