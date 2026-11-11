@@ -1,6 +1,6 @@
 [project]
 name = "cogno-aegis"
-version = "0.1.0"
+version = "0.1.1"
 description = "Pure security primitives for the Cogno stack — AES-256-GCM encryption at rest, constant-time HMAC/secret verification, and a neutral input-size + crisis screen. Host-injected, fail-loud, deps-minimal."
 readme = "README.md"
 requires-python = ">=3.10"

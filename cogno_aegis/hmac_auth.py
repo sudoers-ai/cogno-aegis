@@ -52,11 +52,18 @@ def hmac_verify(secret: _Secret, body: bytes, signature: str, *, prefix: str = S
 
     Returns ``False`` (never raises) on any mismatch, including a missing/empty
     signature — the caller decides what an invalid signature means.
+
+    ``signature`` arrives from OUTSIDE (a request header), so it may carry any bytes a
+    client chose. The comparison is done as bytes: ``hmac.compare_digest`` raises
+    ``TypeError`` on a ``str`` that contains a non-ASCII character, and a valid HMAC is
+    always ASCII hex, so a header with a non-ASCII byte is simply wrong — it must return
+    ``False``, never crash the verifier (and hand an attacker a way to turn a signed route
+    into a 500). Encoding both sides first keeps the check constant-time and total.
     """
     if not signature:
         return False
     expected = hmac_sign(secret, body, prefix=prefix)
-    return hmac.compare_digest(signature, expected)
+    return hmac.compare_digest(_as_bytes(signature), _as_bytes(expected))
 
 
 def compare_secret(a: _Secret, b: _Secret) -> bool:
