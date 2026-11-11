@@ -50,7 +50,9 @@ def verify_webhook(headers, body, *, secret, api_key):
     # Mode 1: HMAC-SHA256 body signature (preferred)
     sig = headers.get("x-hub-signature-256", "")
     if secret and sig:
-        return hmac_verify(secret, body, sig)          # "sha256=…" style
+        return hmac_verify(secret, body, sig)          # "sha256=…" style; a header
+        #                                                # with non-ASCII bytes returns
+        #                                                # False, it never raises
     # Mode 2: shared API key header (fallback)
     got = headers.get("apikey", "")
     if api_key and got:

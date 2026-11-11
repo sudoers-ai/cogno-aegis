@@ -44,6 +44,18 @@ def test_bare_prefix():
     assert hmac_verify("k", b"x", sig, prefix="") is True
 
 
+def test_verify_non_ascii_signature_is_false_not_typeerror():
+    """A header is attacker-controlled: a non-ASCII signature must return False, not raise.
+
+    ``hmac.compare_digest`` raises ``TypeError`` when a ``str`` operand holds a non-ASCII
+    character; before the byte-wise comparison this turned a signed webhook route into a 500
+    for any request whose signature header carried, say, a Cyrillic or accented character.
+    """
+    body = b'{"event":"ping"}'
+    for bad_sig in ("sha256=Belmira", " †ampered", "sha256=çédille", "sha256=Ωmega"):
+        assert hmac_verify("k", body, bad_sig) is False
+
+
 def test_compare_secret():
     assert compare_secret("abc", "abc") is True
     assert compare_secret("abc", "abd") is False
